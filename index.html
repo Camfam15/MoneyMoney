@@ -2,121 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Money Map - Earnings YTD</title>
+  <title>Money Map - YTD Player Earnings</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    html, body { margin: 0; height: 100%; font-family: sans-serif; }
-    #container { display: flex; height: 100vh; }
-    #map { flex: 2; height: 100vh; }
-    #sidebar { flex: 1; padding: 10px; overflow-y: auto; background: #f4f4f4; }
-    .player { margin-bottom: 8px; color: blue; cursor: pointer; }
-    .ticker { font-size: 0.85em; color: #333; }
-    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-             background: rgba(0,0,0,0.85); color: white; padding: 20px; overflow-y: auto; z-index: 9999; }
-    #closeModal { position: absolute; top: 10px; right: 20px; font-size: 28px; cursor: pointer; }
-    #chart-container { background: white; padding: 20px; }
-  </style>
-</head>
-<body>
-  <div id="container">
-    <div id="map"></div>
-    <div id="sidebar">
-      <h3>All Players</h3>
-      <div id="playerList"></div>
-    </div>
-  </div>
-
-  <div id="chart-container">
-    <h3>Earnings Since Jan 1 (YTD)</h3>
-    <canvas id="earningsChart" width="600" height="300"></canvas>
-  </div>
-
-  <div id="modal">
-    <span id="closeModal">&times;</span>
-    <div id="modalContent"></div>
-  </div>
-
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-  <script>
-  window.onload = function () {
-    const playerData = {
-      'US-LA': { countryName: 'Los Angeles, CA', coords: [34.05, -118.25], players: [
-        { name: "LeBron James", team: "LA Lakers", league: "NBA", salary: 48200000, endorsements: 80000000, bio: "Basketball legend." }
-      ]},
-      'US-SF': { countryName: 'San Francisco, CA', coords: [37.77, -122.42], players: [
-        { name: "Stephen Curry", team: "Warriors", league: "NBA", salary: 51800000, endorsements: 50000000, bio: "Sharp-shooting guard." }
-      ]},
-      'US-MIA': { countryName: 'Miami, FL', coords: [25.76, -80.19], players: [
-        { name: "Lionel Messi", team: "Inter Miami", league: "MLS", salary: 65000000, endorsements: 70000000, bio: "Soccer legend." }
-      ]},
-      'US-MN': { countryName: 'Minneapolis, MN', coords: [44.98, -93.27], players: [
-        { name: "Anthony Edwards", team: "Timberwolves", league: "NBA", salary: 13000000, endorsements: 4000000, bio: "Rising star." }
-      ]}
-    };
-
-    const allPlayers = [];
-    const map = L.map('map').setView([37.1, -95.7], 4);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    for (const loc of Object.values(playerData)) {
-      loc.players.forEach(p => {
-        p.id = p.name.replace(/\s/g, '');
-        p.perSecond = p.salary / 31536000;
-        allPlayers.push(p);
-      });
-
-      const popupHTML = loc.players.map(p => `
-        <div>
-          <strong>${p.name}</strong><br/>
-          ${p.team} (${p.league})<br/>
-          <span id="${p.id}-popup">YTD: $0.00</span><br/>
-          <a href="#" onclick="showModalFromPopup('${p.id}');return false;">Read Bio</a>
-        </div>
-      `).join('<hr/>');
-
-      const marker = L.marker(loc.coords).addTo(map)
-        .bindPopup(`<strong>${loc.countryName}</strong><br/>${popupHTML}`);
-      marker.on('click', () => map.setView(loc.coords, 6));
+    html, body {
+      margin: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: #111; color: #eee;
     }
-
-    const list = document.getElementById('playerList');
-    allPlayers.forEach(p => {
-      const entry = document.createElement('div');
-      entry.className = 'player';
-      entry.textContent = `${p.name} - $${p.perSecond.toFixed(2)}/sec`;
-      entry.onclick = () => showModal(p);
-      const ticker = document.createElement('div');
-      ticker.id = `${p.id}-ticker`;
-      ticker.className = 'ticker';
-      ticker.textContent = 'YTD: $0.00';
-      list.appendChild(entry);
-      list.appendChild(ticker);
-    });
-
-    function showModal(player) {
-      const modal = document.getElementById('modal');
-      const content = document.getElementById('modalContent');
-      content.innerHTML = `
-        <h2>${player.name}</h2>
-        <p><strong>Team:</strong> ${player.team}</p>
-        <p><strong>League:</strong> ${player.league}</p>
-        <p><strong>Salary:</strong> $${player.salary.toLocaleString()}</p>
-        <p><strong>Endorsements:</strong> $${player.endorsements.toLocaleString()}</p>
-        <p>${player.bio}</p>`;
-      modal.style.display = 'block';
+    #container {
+      display: flex; height: 100vh;
     }
-
-    document.getElementById('closeModal').onclick = () => {
-      document.getElementById('modal').style.display = 'none';
-    };
-
-    window.showModalFromPopup = function(id) {
-      const p = allPlayers.find(p => p.id === id);
-      if (p) showModal(p);
-    };
-    // Update YTD earnings and chart
+    #map {
+      flex: 2; height: 100vh;
+    }
+    #sidebar {
+      flex: 1; padding: 15px; overflow-y: auto; background: #1b1b1b; color: #fff;
+      border-left: 2px solid #333;
+    }
+    .player {
+      margin-bottom: 10px; cursor: pointer;
+      color: #0af; font-weight: 500;
+    }
+    .ticker {
+      font-size: 0.85em; color: #ccc;
+      margin-bottom: 15px;
+    }
+    #modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95); color: white; padding: 40px; overflow-y: auto; z-index: 9999;
+      animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    #closeModal {
+      position: absolute; top: 20px; right: 30px; font-size: 28px; cursor: pointer; color: #f33;
+    }
+    #exitButton {
+      background: #f33; color: #fff; padding: 8px 16px; border: none; cursor: pointer;
+      margin-top:
     const chartCtx = document.getElementById('earningsChart').getContext('2d');
     const earningsChart = new Chart(chartCtx, {
       type: 'line',
@@ -127,15 +52,20 @@
           data: [],
           fill: false,
           borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
-          tension: 0.3
+          tension: 0.4
         }))
       },
       options: {
         animation: false,
         responsive: true,
+        plugins: {
+          legend: {
+            labels: { color: '#fff' }
+          }
+        },
         scales: {
-          x: { title: { display: true, text: 'Seconds Since Load' } },
-          y: { title: { display: true, text: 'Earnings YTD ($)' } }
+          x: { ticks: { color: '#aaa' }, title: { display: true, text: 'Seconds', color: '#fff' } },
+          y: { ticks: { color: '#aaa' }, title: { display: true, text: 'YTD Earnings ($)', color: '#fff' } }
         }
       }
     });
@@ -144,16 +74,19 @@
       const now = new Date();
       const secondsSinceMidnight = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
       const daysSinceNewYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-      const totalSeconds = daysSinceNewYear * 86400 + secondsSinceMidnight;
+      const totalSeconds = (daysSinceNewYear * 86400) + secondsSinceMidnight;
 
       earningsChart.data.labels.push(`${totalSeconds}s`);
       allPlayers.forEach((p, i) => {
-        const earnedYTD = (p.salary / 31536000) * totalSeconds;
-        document.getElementById(`${p.id}-ticker`).textContent = `YTD: $${earnedYTD.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-        const popupEl = document.getElementById(`${p.id}-popup`);
-        if (popupEl) popupEl.textContent = `YTD: $${earnedYTD.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-        earningsChart.data.datasets[i].data.push(earnedYTD);
+        const earned = (p.salary / 31536000) * totalSeconds;
+        const formatted = `$${earned.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+        const popup = document.getElementById(`${p.id}-popup`);
+        const ticker = document.getElementById(`${p.id}-ticker`);
+        if (popup) popup.textContent = `YTD: ${formatted}`;
+        if (ticker) ticker.textContent = `YTD: ${formatted}`;
+        earningsChart.data.datasets[i].data.push(earned);
       });
+
       earningsChart.update();
     }, 1000);
   };
